@@ -1,7 +1,5 @@
 # **Castor - TheHackersLabs**
 
----
-
 ## **Información General**
 
 - **Plataforma:** TheHackersLabs
