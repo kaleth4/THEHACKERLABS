@@ -1,4 +1,4 @@
-# **Rearme.md | Castor - TheHackersLabs**
+# **Castor - TheHackersLabs**
 
 ---
 
