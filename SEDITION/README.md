@@ -1,4 +1,4 @@
-```markdown
+
 # **Sedition - The Hackers Labs**
 **Plataforma:** Linux
 **Dificultad:** Media
