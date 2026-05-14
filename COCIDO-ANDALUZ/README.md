@@ -1,10 +1,6 @@
-```markdown
 # 🍲 Cocido Andaluz
-
 **Plataforma:** [The Hackers Labs](https://thehackerslabs.com)
 **Sistema Operativo:** Windows
-
----
 
 ## 🔍 **Reconocimiento de Hosts**
 
