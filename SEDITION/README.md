@@ -2,9 +2,6 @@
 # **Sedition - The Hackers Labs**
 **Plataforma:** Linux
 **Dificultad:** Media
-**Autor:** [Tu nombre o equipo]
-
----
 
 ## **📌 Descripción**
 Máquina Linux basada en Debian con servicios **SMB** y **SSH** expuestos. La explotación incluye:
