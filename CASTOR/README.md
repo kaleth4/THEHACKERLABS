@@ -11,8 +11,6 @@
 
 ---
 
----
-
 ## **Reconocimiento**
 
 ### **Descubrimiento de hosts**
