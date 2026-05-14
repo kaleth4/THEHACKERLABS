@@ -23,9 +23,9 @@ arp-scan -I eth0 --localnet
 Resultado:
 
 192.168.80.73   08:00:27:0b:9c:e9       PCS Systemtechnik GmbH
-
+```
 Posteriormente se confirmó con nmap:
-
+```
 nmap -sn 192.168.80.0/24
 
 Hosts detectados:
