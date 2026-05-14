@@ -166,10 +166,5 @@ cd /root
 cat root.txt
 ```
 
-# Flag:
+# Flag Root:
 THL{asdmaskdmasdkCASTOR}
-
-Referencias
-https://gtfobins.github.io/
-https://owasp.org/www-community/vulnerabilities/XML_External_Entity_(XXE)_Processing
-https://nmap.org/
