@@ -1,7 +1,6 @@
-# 🥷 **El Ninja — Walkthrough**
+# 🥷 El Ninja - Writeup Completo
 
-> **Precision. Silencio. Ejecución.**  
-> Una máquina THL Ninjas que pondrá a prueba tu ingenio, desde el descubrimiento inicial hasta la escalada de privilegios con un CVE reciente.
+![Banner](https://img.shields.io/badge/Dificultad-Media-yellow) ![Status](https://img.shields.io/badge/Estado-Completado-brightgreen) ![Root](https://img.shields.io/badge/Root-Obtenido-red)
 
 ---
 
