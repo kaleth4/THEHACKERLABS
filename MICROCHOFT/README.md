@@ -1,8 +1,10 @@
 
 # The Hackers Labs Writeup — Microchoft
-![Uploading image_2dffb87.png…]()
+<img width="1376" height="768" alt="image_2dffb87" src="https://github.com/user-attachments/assets/cab475fd-25c9-4f9f-af36-5693665651b3" />
 
-https://youtu.be/lSUQq255I-s?si=VA0BCk5vfyJVz1cI
+
+
+
 A continuación, se describe la guía de resolución de la máquina de **The Hackers Labs** denominada *"Microchoft"*.
 
 Esta máquina está catalogada con la dificultad **"Principiante"** y sus autores son **condor** y **CuriosidadesDeHackers**.
