@@ -1,4 +1,4 @@
-```markdown
+
 # The Hackers Labs Writeup — Microchoft
 
 A continuación, se describe la guía de resolución de la máquina de **The Hackers Labs** denominada *"Microchoft"*.
