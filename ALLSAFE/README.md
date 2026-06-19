@@ -1,4 +1,3 @@
-¡Absolutamente! Aquí tienes un write-up organizado, coherente y atractivo de la máquina AllSafe, listo para tu archivo README.md:
 
 # ALLSAFE - The Hacker Labs 🚀
 
