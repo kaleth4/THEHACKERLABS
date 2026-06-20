@@ -203,3 +203,6 @@ cat /root/root.txt
 
 
 *Flags obtenidas: `user.txt` y `root.txt`.*
+
+<img width="1323" height="730" alt="image" src="https://github.com/user-attachments/assets/0c03b036-ae8b-48c9-87c2-5c424796452a" />
+
