@@ -144,7 +144,8 @@ hydra -L /usr/share/wordlists/seclists/Usernames/xato-net-10-million-usernames.t
 c:\Users\Administrador\Desktop>type root.txt
 xxxxxxxxxxxxxx
 ```
+<img width="1327" height="726" alt="image" src="https://github.com/user-attachments/assets/0bbec953-75dc-4dd6-9372-c52ac701edef" />
 
-<img width="1600" height="900" alt="image" src="https://github.com/user-attachments/assets/5017e487-4213-4fc2-ac5f-2a557cb8008b" />
+
 
 
