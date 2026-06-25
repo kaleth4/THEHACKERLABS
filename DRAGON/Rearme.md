@@ -70,7 +70,6 @@ Con el usuario sospechado (`dragon`) y usando la wordlist clásica:
 ```bash
 hydra -l dragon -P /usr/share/wordlists/rockyou.txt ssh://192.168.1.54
 ```  
-<img width="1920" height="1080" alt="dragon" src="https://github.com/user-attachments/assets/108ea89a-88ed-4276-ab2d-2b977fc06b9f" />
 
 
 
@@ -121,7 +120,6 @@ cd /root
 ls -la  
 cat flag.txt  # o bandera_root.txt / root.txt / etc.
 ```  
-<img width="1920" height="1080" alt="dragon_secret" src="https://github.com/user-attachments/assets/2020d1ce-a904-49ef-92ff-ffc8c0a45711" />
 
 ✅ Obtenemos la **bandera root**, confirmando el compromiso total de la máquina.  
 
