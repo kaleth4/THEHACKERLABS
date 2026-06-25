@@ -1,4 +1,4 @@
-# 🐉 Writeup: La Máquina del Dragón  
+🐉 Writeup: La Máquina del Dragón  
 
 ---
 
@@ -63,6 +63,7 @@ gobuster dir -u http://192.168.1.54 -w /usr/share/wordlists/dirbuster/directory-
 Al visitarlo, se muestra un mensaje dirigido al usuario (posiblemente una pista para credenciales o contexto narrativo).  
 
 ---
+<img width="1178" height="573" alt="image" src="https://github.com/user-attachments/assets/09a759e4-c198-4632-9330-f81594b43303" />
 
 ## 🔑 **4. Explotación: Fuerza Bruta SSH**  
 
@@ -70,6 +71,7 @@ Con el usuario sospechado (`dragon`) y usando la wordlist clásica:
 ```bash
 hydra -l dragon -P /usr/share/wordlists/rockyou.txt ssh://192.168.1.54
 ```  
+<img width="1167" height="637" alt="image" src="https://github.com/user-attachments/assets/8c37e849-a809-4f4b-9ab3-52445f28d968" />
 
 
 
