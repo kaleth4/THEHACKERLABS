@@ -91,6 +91,7 @@ cat /etc/passwd
 su capitan
 # Contraseña: mar_de_fuego123
 ```
+<img width="1167" height="573" alt="image" src="https://github.com/user-attachments/assets/f7d30ba2-2464-4ed4-866c-684491ee7aa2" />
 
 ### Búsqueda de Vectores de Escalada
 
