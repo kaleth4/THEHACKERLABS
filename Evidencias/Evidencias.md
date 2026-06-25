@@ -89,7 +89,7 @@ como alternativa para seguir usando cat
 <img width="1175" height="641" alt="image" src="https://github.com/user-attachments/assets/62b87c91-a094-4b9a-83ab-1e7893eb58e1" />
 
 ---
-<img width="1175" height="641" alt="image" src="https://github.com/user-attachments/assets/ba0769d7-e92c-4fde-8637-5be561006c51" />
+
 
 
 
@@ -114,4 +114,4 @@ como alternativa para seguir usando cat
 3. **Cifrado en Tránsito:** El tráfico web interceptado utilizaba HTTP plano. Toda transferencia de credenciales o datos sensibles debe realizarse obligatoriamente bajo el protocolo seguro **HTTPS (TLS/SSL)** para mitigar ataques de sniffing en la red.
 
 ---
-📝 *Nota: Este documento ha sido estructurado con fines estrictamente educativos y profesionales como demostración de habilidades en seguridad defensiva y DFIR.*<img width="1920" height="1080" alt="portada" src="https://github.com/user-attachments/assets/bb91789f-8ea9-4975-a3f3-7c72994ec4c4" />
+📝 *Nota: Este documento ha sido estructurado con fines estrictamente educativos y profesionales como demostración de habilidades en seguridad defensiva y DFIR.*<img width="1920" height="1080" alt="portada" 
