@@ -2,7 +2,6 @@
 
 > **Una máquina desafiante de *The Hackers Labs* donde debes descifrar pistas, explotar servicios y escalar privilegios en un sistema lleno de secretos.**
 
-![Logo Hackeando al Hacker](https://via.placeholder.com/150) *(Reemplaza con el logo real)*
 
 ---
 
