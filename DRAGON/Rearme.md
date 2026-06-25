@@ -1,4 +1,4 @@
-<img width="1920" height="1080" alt="dragon" src="https://github.com/user-attachments/assets/db08b475-e5b1-44bb-a495-720c218b3809" /># 🐉 Writeup: La Máquina del Dragón  
+# 🐉 Writeup: La Máquina del Dragón  
 
 ---
 
