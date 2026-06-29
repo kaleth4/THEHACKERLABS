@@ -46,8 +46,10 @@ Ruta encontrada:
 ```
 http://IP/cuatrocuatroveces/
 ```
+<img width="1920" height="926" alt="codigoweb" src="https://github.com/user-attachments/assets/ec79e788-9d17-405b-9777-96e418a73057" />
 
 Se descarga un archivo `.rar`
+<img width="1920" height="934" alt="rar" src="https://github.com/user-attachments/assets/d458741b-149f-4222-a05e-a3a857c652a0" />
 
 ---
 
