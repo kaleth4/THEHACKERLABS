@@ -85,3 +85,6 @@ strings La_Trampa.pcap | grep "www" | sort -u
 
 ---
 
+<img width="1920" height="1080" alt="1" src="https://github.com/user-attachments/assets/fa59ac13-19ba-4d19-ae0b-9580a415df7c" />
+<img width="1920" height="1080" alt="4" src="https://github.com/user-attachments/assets/15e807db-f3d6-45d7-b7f9-6b2aa27b9ff0" />
+<img width="1920" height="1080" alt="3" src="https://github.com/user-attachments/assets/a7b9f3e4-931e-4a52-9dab-2b7ae7963331" />
