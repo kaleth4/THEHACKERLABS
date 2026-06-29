@@ -246,6 +246,7 @@ lavida3nroja
 ```
 THL{control_to}
 ```
+<img width="1918" height="1074" alt="root" src="https://github.com/user-attachments/assets/f0dcf194-1c4a-403e-b812-3e80b13e118c" />
 
 ---
 
