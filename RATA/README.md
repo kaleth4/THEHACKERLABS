@@ -1,4 +1,4 @@
-<img width="1920" height="1080" alt="¿Cuál es el tamaño del archivo_" src="https://github.com/user-attachments/assets/868cbae2-6240-48ce-9815-877d28502838" /># Informe Forense: Desafío "Rata Callejera" (STRRAT Malware)
+# Informe Forense: Desafío "Rata Callejera" (STRRAT Malware)
 
 Este informe técnico documenta el análisis forense digital del desafío **"Rata Callejera"**. El escenario simula la infección de un host corporativo mediante **STRRAT**, un troyano de acceso remoto (RAT) basado en Java, diseñado para el robo de credenciales, registro de pulsaciones de teclas (keylogging) y control remoto del sistema afectado.
 
