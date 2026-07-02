@@ -41,6 +41,7 @@ wfuzz -w /usr/share/wordlists/dirb/common.txt -u "http://192.168.1" -d "FUZZ=/et
 ```
 
 > **Nota:** La ejecución exitosa de este ataque o el análisis posterior del comportamiento web reveló la existencia del parámetro `backdoor`.
+<img width="1920" height="926" alt="index php" src="https://github.com/user-attachments/assets/e1fe7e79-8305-44ff-9db6-cadbfe2f4809" />
 
 ---
 
