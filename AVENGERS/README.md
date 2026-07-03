@@ -15,7 +15,7 @@ ping 192.168 -c 1
 **Resultado:**
 ```
 64 bytes from 192.168: icmp_seq=1 ttl=64 time=6.59 ms
---- 192.168.1.25 ping statistics ---
+--- 192.168 ping statistics ---
 1 packets transmitted, 1 received, 0% packet loss
 ```
 
