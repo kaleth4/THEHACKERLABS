@@ -274,7 +274,7 @@ El CTF presenta un entorno con:
 > **📝 Nota final**: Mantener el entorno organizado (`recon/`, `notes/`, etc.) es clave para CTFs complejos.
 ```
 
-[LUJO.md](https://github.com/user-attachments/files/29616980/LUJO.md)# Reporte de Auditoría: Pivoting, Explotación y Escalada de Privilegios
+# Reporte de Auditoría: Pivoting, Explotación y Escalada de Privilegios
 
 ## 1. Pivoting y Explotación Inicial
 
