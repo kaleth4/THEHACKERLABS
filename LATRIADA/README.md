@@ -1,4 +1,4 @@
-<img width="1920" height="1080" alt="¿Cuál es la IP de la víctima_" src="https://github.com/user-attachments/assets/db833a6c-a2ac-40ae-b3dd-8cb20020dc24" /># 🧪 La Tríada del Malware — Incident Response & Network Forensics
+# 🧪 La Tríada del Malware — Incident Response & Network Forensics
 
 [![Security Level](https://shields.io)]()
 [![Platform](https://shields.io)]()
