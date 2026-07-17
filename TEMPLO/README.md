@@ -1,8 +1,6 @@
 # 🥷 CTF Writeup: Templo
 
-![Target: Linux](https://shields.io)
-![Severity: Hard](https://shields.io)
-![Objective: Root%20Flag](https://shields.io)
+
 
 Documentación detallada de la intrusión y escalada de privilegios en la máquina objetivo **Templo** (`192.168.0.9`). El compromiso del sistema se ejecutó explotando un vector de inclusión de archivos locales (LFI), bypass de subida de archivos mediante webshell, criptoanálisis básico, fuerza bruta a contenedores criptográficos y abuso de sockets de virtualización del sistema.
 
@@ -160,6 +158,7 @@ www-data@TheHackersLabs-Templo:/opt/.XXX$ ls
 ls
 backup.zip
 ```
+<img width="1920" height="1080" alt="zip" src="https://github.com/user-attachments/assets/21b13fc5-aee5-4188-9c74-9fd2bbb5164b" />
 
 ```bash
 www-data@TheHackersLabs-Templo:/opt/.XXX$ which python3
